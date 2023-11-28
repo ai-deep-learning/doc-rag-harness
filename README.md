@@ -12,9 +12,13 @@ The goal of this harness to provide a collection definitions, abstractions, and 
 The harness is intended to be somewhat similar to a Technology + [Technology Compatibility Kit (TCK)](https://en.wikipedia.org/wiki/Technology_Compatibility_Kit) - to provide:
 
 * Java/EMF Ecore model/API for document storage and retrieval including "Design Provider Interface" to be implemented by candidate designs
-* Testing framework for evaluate how different designs perform a specfic task.    
+* Testing framework for evaluate how different designs perform a specific task.    
 
-Java was selected as a dominant technology in the enterprise world, and EMF Ecore was selected because there are capabilities to load/store models from XMI and binary and generate HTML documentation from models and metamodels.
+Java was selected as a dominant technology in the enterprise world with rich expressive power of the language and large mature ecosystem. EMF Ecore was selected because there are capabilities:
+
+* Load/store models from/to YAML, XMI and binary files as well as databases
+* Generate HTML documentation from models and metamodels
+* Tooling support for building viewers and editors - tree, diagram, text; Eclipse IDE and Web Browser
 
 This page provides an introduction to core concepts and outlines several use cases (tasks) and designs (alternatives). 
 
@@ -39,10 +43,11 @@ Document is memorialized representation of thought or information. For the purpo
 
 "Physical" implementations:
 
+* Text file
 * PDF. In Java can be loaded using [Apache PDFBox](https://pdfbox.apache.org/)
 * OCR result in, say, JSON
 * MS Office documents - in Java can be loaded with [Apache POI](https://poi.apache.org/). MS Excel files can be loaded as Ecore model with [Nasdanika Excel Model](https://github.com/Nasdanika-Models/excel) 
-* HTML documents/pages
+* HTML documents/pages (subtype of text)
 
 "Logical" implementations:
 
@@ -50,6 +55,7 @@ Document is memorialized representation of thought or information. For the purpo
     * Header and footer added by the fax might be removed as irrelevant
     * Page bodies might be parsed into a SWIFT specific structure, e.g. [MT 700](https://www2.swift.com/knowledgecentre/publications/us7m_20210723/1.0?topic=mt700-format-spec.htm)
 * For HTML - a documentation page. Say, [Spring Expression Language (SpEL)](https://docs.spring.io/spring-framework/reference/core/expressions.html) In this case header, left navigation, right sidebar, and footer might be discarded as not relevant or parsed into respective logical document features which might be ignored. Breadcrumb can be used for categorization.      
+* For text files - depending on the content type. E.g. ``pom.xml`` can be loaded into a Project Object Model, Java file can be loaded into a syntax tree or a graph with resolved type/field/method references.
 
 ### Document Loader
 
@@ -58,6 +64,8 @@ Converts one document representation to another. E.g. PDF or OCR JSON to an obje
 ### Documents Source 
 
 Storage of documents in a specific format or formats. E.g. a file system with PDF documents. Documents sources may be converted/adapted. 
+One of examples of document source is a Git commit. 
+[Nasdanika GitLab](https://github.com/Nasdanika-Models/gitlab) model can be used to implement document loading from GitLab. 
 
 ### Document Repository
 
@@ -92,6 +100,7 @@ Sponsors need to balance multiple criteria to minimize the "loss function":
 
 * Retrieval speed
 * Accuracy   
+* Completeness
 * Costs such as running costs, license costs etc.
 
 ### Design
@@ -161,15 +170,20 @@ As such, it is essentially a harness metadata repository containing design defin
 Generates a report. The report might be in HTML format with visualizations. 
 A possible report format:
 
-* Left panel with the designs tree, tasks tree, and test data sets for tasks.
+* Left panel with the designs tree, tasks tree, and test data sets for tasks. It may also include a "tech stack tree" - categorized design building blocks. For example, a tree of vector databases, their versions and configurations. If the left panel becomes too noisy, some of the items can be moved to the navigation bar.  
 * Content panel - documentation for the selected item. E.g.
-    * Home page - a summary of performed tests: filterable sortable table with design/test permutations (for relatively small spaces), visualizations, e.g. [ECharts](https://echarts.apache.org/examples/en/index.html) [3D Scatter](https://echarts.apache.org/examples/en/editor.html?c=scatter3d&gl=1&theme=dark)
+    * Home page - a summary of performed tests: filterable sortable table with design/test permutations (for relatively small spaces), visualizations, e.g. [ECharts](https://echarts.apache.org/examples/en/index.html) [3D Scatter](https://echarts.apache.org/examples/en/editor.html?c=scatter3d&gl=1&theme=dark). It may also contain a design wizard to build designs by answering questions and selecting a tested design which best fits the answers.
     * Design page - configuration, tests and results - table, visualizations
-    * Task page - description, tests, designs, visualizations
+    * Task page - description, tests, designs, visualizations. It may host an aggregation Web UI which collects answers from all designs for this task and allows users to compare responses from alternative designs. One option to compare is [Pairwise comparison](https://en.wikipedia.org/wiki/Pairwise_comparison) possibly without reveling which design a given response comes from.
+    * Building block (e.g. vector database, its version, configuration) - description, designs which use it. 
+    
+Report may contain links to the Web UI or even "host" the Web UI if it is implemented as a Single Page Application (SPA) with, say, [React](https://react.dev/) or [Vue.js](https://vuejs.org/)/[BootstrapVue](https://bootstrap-vue.org/)     
     
 --- Work in progress ---    
     
 ## Tasks
+
+This section outlines several tasks (use cases) for retrieval augmented generation and search in general.
 
 Dimensions:
 
@@ -181,16 +195,65 @@ Dimensions:
 
 ### Technical documentation
 
+Example - technology function in a large enterprise:
+
+* Multiple levels:
+    * Corporate, binds enterprise-wide technology choices (e.g. Java/Spring, Maven components), provides enterprise-wide shared building blocks (e.g. a library of Bootstrap components) and other technology (e.g. a build pipeline)
+    * Segment - narrows technology choices, e.g. version of Java, add segment-specific ways of doing things on top of the enterprise guidelines (which are in turn built on top of the industry/vendor technology guidelines and documentation). May introduce segment-level building blocks.
+    * Capability/team - narrows technology choices even further and refines how they are used. May introduce capability/team level building blocks such as widget libraries.
+    
+For each of the above there is a time dimension - tech stack updates on the top, releases on the bottom. 
+See [TOGAF Architecture Landscape](https://pubs.opengroup.org/togaf-standard/applying-the-adm/chap03.html#tag_03_02) for a visualization.
+
+In such an environment users need a retrieval solution which allows to retrieve documents specific to the user's position and role in the enterprise and the effort they are assigned to.
+E.g. a Java developer working on, say the current release may need information about Java 17. If the same developer is assigned to work on the future release they might need information about, say, Java 20.
+When they work with technologies such as Kubernetes and Azure AKS, the vendor documentation might be largely useless and cause confusion because it contains general information, but they need to know about enterprise/segment specific ways of doing things.  
+
+* Number of documents: Tens of thousands
+* Number of users: Hundreds to thousands
+* Frequency of changes: Low (e.g. monthly) to Moderate (several times a month)
+* Privacy: Internal
+* Risk: Low 
+
 ### Procedures
 
+Dimensions:
+
+* Number of documents: Low thousands
+* Number of users: Hundreds to thousands
+* Frequency of changes: Low (e.g. monthly)
+* Privacy: Internal, Restricted, Confidential 
+* Risk: Medium to High
+
 ### Operational Documents
+
+Dimensions:
+
+* Number of documents: Possibly millions
+* Number of users: Hundreds to thousands
+* Frequency of changes: High (daily)
+* Privacy: Confidential, personal information - PII, PHI, PCI 
+* Risk: High
 
 ## Designs
 
 ### Embeddings, vector databases, LLM's
 
+TODO. According to industry information targets a very large number of documents - matches the Operational Documents Use Case
+
 ### Graphs
 
+TODO. May be better for a smaller number of documents (procedures) - they may all fit in memory and searches can be performed on semantic graphs. 
+In the vector database case one way to build indexes is to use graphs - [Hierarchical Navigable Small World (HNSW)](https://towardsdatascience.com/similarity-search-part-4-hierarchical-navigable-small-world-hnsw-2aad4fe87d37)
+
 ### Polymorphic graphs
+
+TODO. Might be a good fit for the technical documentation use case:
+
+* The enterprise builds a knowledge graph (model) for the enterprise technology choices. There might be multiple models - baseline, future releases
+* Segments take the enterprise graphs/models and customize - the concept similar to inheritance in object-oriented languages such as Java and also similar to layers in Docker
+* Capabilities/teams may take it further
+
+This process will result in a large number (hundreds) of relatively small graphs/models (knowledge bases) with tens of thousands of documents. 
 
 
