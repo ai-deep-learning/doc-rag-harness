@@ -54,6 +54,7 @@ Document is memorialized representation of thought or information. For the purpo
 * For PDF/OCR - a scan of a business document. For example, a fax of a SWIFT message. In this case:
     * Header and footer added by the fax might be removed as irrelevant
     * Page bodies might be parsed into a SWIFT specific structure, e.g. [MT 700](https://www2.swift.com/knowledgecentre/publications/us7m_20210723/1.0?topic=mt700-format-spec.htm)
+    * Embeddings might be created for bodies or paragraphs or clauses for some elements, clause numbers might be excluded from the text. Somewhat similar to [Wikipedia articles embeddings](https://txt.cohere.com/embedding-archives-wikipedia/) where embeddings are calculated for passages excluding headers. 
 * For HTML - a documentation page. Say, [Spring Expression Language (SpEL)](https://docs.spring.io/spring-framework/reference/core/expressions.html) In this case header, left navigation, right sidebar, and footer might be discarded as not relevant or parsed into respective logical document features which might be ignored. Breadcrumb can be used for categorization.      
 * For text files - depending on the content type. E.g. ``pom.xml`` can be loaded into a Project Object Model, Java file can be loaded into a syntax tree or a graph with resolved type/field/method references.
 
@@ -178,6 +179,10 @@ A possible report format:
     * Building block (e.g. vector database, its version, configuration) - description, designs which use it. 
     
 Report may contain links to the Web UI or even "host" the Web UI if it is implemented as a Single Page Application (SPA) with, say, [React](https://react.dev/) or [Vue.js](https://vuejs.org/)/[BootstrapVue](https://bootstrap-vue.org/)     
+
+### Community
+
+Parties contributing to the harness, designs, and test data sets. Community members may play different roles on different components.  
     
 --- Work in progress ---    
     
